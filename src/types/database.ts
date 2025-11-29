@@ -16,6 +16,20 @@ export interface Appliance {
   daily_hours: number;
   quantity: number | null;
   created_at: string | null;
+  // Campos adicionales de la etiqueta energética
+  monthly_consumption_kwh: number | null;
+  energy_efficiency: number | null;
+  appliance_type: string | null;
+  cooling_capacity_w: number | null;
+  cooling_capacity_btu: number | null;
+  operating_temp_range: string | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  filters_count: number | null;
+  energy_rating: string | null;
+  brand: string | null;
+  model: string | null;
+  image_url: string | null;
 }
 
 export interface Prediction {
