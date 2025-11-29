@@ -24,7 +24,6 @@ const applianceSchema = z.object({
   power_watts: z.number().min(1, 'La potencia debe ser mayor a 0'),
   daily_hours: z.number().min(0).max(24, 'Las horas deben estar entre 0 y 24'),
   quantity: z.number().min(1).optional().nullable(),
-  user_id: z.string().uuid().optional().nullable(),
 });
 
 type ApplianceFormData = z.infer<typeof applianceSchema>;
@@ -51,7 +50,6 @@ export const ApplianceForm = ({ appliance, onSuccess }: ApplianceFormProps) => {
       power_watts: appliance?.power_watts || 0,
       daily_hours: Number(appliance?.daily_hours) || 0,
       quantity: appliance?.quantity || 1,
-      user_id: appliance?.user_id || null,
     },
   });
 
@@ -63,7 +61,6 @@ export const ApplianceForm = ({ appliance, onSuccess }: ApplianceFormProps) => {
         power_watts: appliance.power_watts,
         daily_hours: Number(appliance.daily_hours),
         quantity: appliance.quantity || 1,
-        user_id: appliance.user_id,
       });
       setCategory(appliance.category);
     }
@@ -97,8 +94,10 @@ export const ApplianceForm = ({ appliance, onSuccess }: ApplianceFormProps) => {
 
   const onSubmit = (data: ApplianceFormData) => {
     const submitData = {
-      ...data,
+      name: data.name,
       category,
+      power_watts: data.power_watts,
+      daily_hours: data.daily_hours,
       quantity: data.quantity || 1,
     };
 

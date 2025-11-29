@@ -20,7 +20,6 @@ const predictionSchema = z.object({
   estimated_cost: z.number().optional().nullable(),
   savings_yearly: z.number().optional().nullable(),
   payback_period_years: z.number().optional().nullable(),
-  user_id: z.string().uuid().optional().nullable(),
 });
 
 type PredictionFormData = z.infer<typeof predictionSchema>;
@@ -49,7 +48,6 @@ export const PredictionForm = ({ prediction, onSuccess }: PredictionFormProps) =
       estimated_cost: prediction ? Number(prediction.estimated_cost) : null,
       savings_yearly: prediction ? Number(prediction.savings_yearly) : null,
       payback_period_years: prediction ? Number(prediction.payback_period_years) : null,
-      user_id: prediction?.user_id || null,
     },
   });
 
@@ -67,7 +65,6 @@ export const PredictionForm = ({ prediction, onSuccess }: PredictionFormProps) =
         payback_period_years: prediction.payback_period_years
           ? Number(prediction.payback_period_years)
           : null,
-        user_id: prediction.user_id,
       });
     }
   }, [prediction, reset]);
@@ -101,7 +98,12 @@ export const PredictionForm = ({ prediction, onSuccess }: PredictionFormProps) =
 
   const onSubmit = (data: PredictionFormData) => {
     const submitData = {
-      ...data,
+      total_daily_consumption_kwh: data.total_daily_consumption_kwh,
+      total_monthly_consumption_kwh: data.total_monthly_consumption_kwh,
+      recommended_solar_panels: data.recommended_solar_panels,
+      panel_wattage: data.panel_wattage,
+      battery_capacity_kwh: data.battery_capacity_kwh,
+      inverter_capacity_kw: data.inverter_capacity_kw,
       estimated_cost: data.estimated_cost || null,
       savings_yearly: data.savings_yearly || null,
       payback_period_years: data.payback_period_years || null,

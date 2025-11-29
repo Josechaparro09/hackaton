@@ -1,5 +1,5 @@
 export interface Profile {
-  id: string;
+  id: string; // Este ID es el mismo que auth.users.id (foreign key)
   full_name: string | null;
   region: string;
   city: string | null;

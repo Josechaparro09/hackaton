@@ -17,7 +17,6 @@ const climatePredictionSchema = z.object({
   temperature_avg: z.number().optional().nullable(),
   cloud_coverage_percent: z.number().min(0).max(100).optional().nullable(),
   estimated_production_kwh: z.number().optional().nullable(),
-  user_id: z.string().uuid().optional().nullable(),
 });
 
 type ClimatePredictionFormData = z.infer<typeof climatePredictionSchema>;
@@ -52,7 +51,6 @@ export const ClimatePredictionForm = ({
       estimated_production_kwh: prediction?.estimated_production_kwh
         ? Number(prediction.estimated_production_kwh)
         : null,
-      user_id: prediction?.user_id || null,
     },
   });
 
@@ -71,7 +69,6 @@ export const ClimatePredictionForm = ({
         estimated_production_kwh: prediction.estimated_production_kwh
           ? Number(prediction.estimated_production_kwh)
           : null,
-        user_id: prediction.user_id,
       });
     }
   }, [prediction, reset]);
@@ -105,7 +102,8 @@ export const ClimatePredictionForm = ({
 
   const onSubmit = (data: ClimatePredictionFormData) => {
     const submitData = {
-      ...data,
+      date: data.date,
+      region: data.region,
       solar_radiation_kwh_m2: data.solar_radiation_kwh_m2 || null,
       temperature_avg: data.temperature_avg || null,
       cloud_coverage_percent: data.cloud_coverage_percent || null,

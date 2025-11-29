@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { ensureProfileExists } from '@/lib/supabase-queries';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -21,18 +22,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Asegurar que existe un perfil cuando se carga la sesión
+      if (session?.user) {
+        try {
+          await ensureProfileExists(session.user.id);
+        } catch (profileError) {
+          console.error('Error al crear/verificar perfil:', profileError);
+        }
+      }
+      
       setLoading(false);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Asegurar que existe un perfil cuando cambia el estado de autenticación
+      if (session?.user) {
+        try {
+          await ensureProfileExists(session.user.id);
+        } catch (profileError) {
+          console.error('Error al crear/verificar perfil:', profileError);
+        }
+      }
+      
       setLoading(false);
     });
 
@@ -52,6 +73,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
 
+    // Asegurar que existe un perfil para el usuario
+    if (data.user) {
+      try {
+        await ensureProfileExists(data.user.id);
+      } catch (profileError) {
+        console.error('Error al crear/verificar perfil:', profileError);
+        // No lanzamos el error para no bloquear el login, pero lo registramos
+      }
+    }
+
     toast.success('Sesión iniciada correctamente');
     setSession(data.session);
     setUser(data.user);
@@ -68,6 +99,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error.message,
       });
       throw error;
+    }
+
+    // Crear perfil automáticamente cuando se registra un nuevo usuario
+    if (data.user) {
+      try {
+        await ensureProfileExists(data.user.id);
+      } catch (profileError) {
+        console.error('Error al crear perfil:', profileError);
+        toast.error('Error al crear perfil', {
+          description: 'La cuenta se creó pero hubo un problema al crear el perfil. Por favor, contacta al soporte.',
+        });
+        // No lanzamos el error para permitir que el usuario continúe
+      }
     }
 
     toast.success('Cuenta creada correctamente', {
