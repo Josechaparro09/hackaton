@@ -166,7 +166,7 @@ const EnergyPrediction = () => {
 	const summary = calculateConsumption(appliances, pricePerKwh);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-background">
+		<Layout>
 			<div className="container mx-auto px-4 py-8 max-w-7xl">
 				{/* Header */}
 				<header className="mb-8 animate-fade-in">
@@ -181,20 +181,6 @@ const EnergyPrediction = () => {
 								</h1>
 								<p className="text-muted-foreground">Predicción de Consumo Energético</p>
 							</div>
-						</div>
-						<div className="flex items-center gap-2">
-							<Link to="/">
-								<Button variant="outline" className="gap-2">
-									<ArrowLeft className="h-4 w-4" />
-									Inicio
-								</Button>
-							</Link>
-							<Link to="/solar-production">
-								<Button variant="outline" className="gap-2">
-									<Sun className="h-4 w-4" />
-									Producción Solar
-								</Button>
-							</Link>
 						</div>
 					</div>
 				</header>
