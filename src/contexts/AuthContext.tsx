@@ -21,43 +21,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    let initialSessionLoaded = false;
+
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
+      initialSessionLoaded = true;
       
-      // Asegurar que existe un perfil cuando se carga la sesión
-      if (session?.user) {
-        try {
-          await ensureProfileExists(session.user.id);
-        } catch (profileError) {
-          console.error('Error al crear/verificar perfil:', profileError);
-        }
-      }
-      
+      // Establecer loading a false primero, luego verificar perfil en background
       setLoading(false);
+      
+      // Verificar perfil en background (no bloquea la carga)
+      if (session?.user) {
+        ensureProfileExists(session.user.id).catch((profileError) => {
+          console.error('Error al crear/verificar perfil:', profileError);
+          // Error silencioso, no bloquea la app
+        });
+      }
+    }).catch((error) => {
+      console.error('Error al obtener sesión:', error);
+      if (mounted) {
+        setLoading(false);
+        initialSessionLoaded = true;
+      }
     });
 
-    // Listen for auth changes
+    // Listen for auth changes (solo después de la carga inicial)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted || !initialSessionLoaded) return;
+
       setSession(session);
       setUser(session?.user ?? null);
       
-      // Asegurar que existe un perfil cuando cambia el estado de autenticación
+      // Verificar perfil en background cuando cambia el estado de autenticación
       if (session?.user) {
-        try {
-          await ensureProfileExists(session.user.id);
-        } catch (profileError) {
+        ensureProfileExists(session.user.id).catch((profileError) => {
           console.error('Error al crear/verificar perfil:', profileError);
-        }
+          // Error silencioso, no bloquea la app
+        });
       }
-      
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
