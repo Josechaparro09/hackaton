@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ApplianceForm } from "@/components/ApplianceForm";
 import { ApplianceList } from "@/components/ApplianceList";
 import { ConsumptionDashboard } from "@/components/ConsumptionDashboard";
+import { SolarBatteryPrediction } from "@/components/SolarBatteryPrediction";
 import { PriceSettings } from "@/components/PriceSettings";
 import { Button } from "@/components/ui/button";
 import { Appliance } from "@/types/appliance";
@@ -44,12 +45,20 @@ const Index = () => {
                 <p className="text-muted-foreground">Calculadora de Consumo Eléctrico</p>
               </div>
             </div>
-            <Link to="/solar-production">
-              <Button variant="outline" className="gap-2">
-                <Sun className="h-4 w-4" />
-                Producción Solar
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link to="/energy-prediction">
+                <Button variant="outline" className="gap-2">
+                  <Zap className="h-4 w-4" />
+                  Predicción
+                </Button>
+              </Link>
+              <Link to="/solar-production">
+                <Button variant="outline" className="gap-2">
+                  <Sun className="h-4 w-4" />
+                  Producción Solar
+                </Button>
+              </Link>
+            </div>
           </div>
         </header>
 
@@ -57,6 +66,13 @@ const Index = () => {
         {appliances.length > 0 && (
           <div className="mb-8 animate-fade-in">
             <ConsumptionDashboard summary={summary} />
+          </div>
+        )}
+
+        {/* Predicción Solar y Baterías */}
+        {appliances.length > 0 && (
+          <div className="mb-8 animate-fade-in">
+            <SolarBatteryPrediction appliances={appliances} pricePerKwh={pricePerKwh} />
           </div>
         )}
 

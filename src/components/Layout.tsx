@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, Database, Home } from 'lucide-react';
+import { LogOut, User, Database, Home, Sun, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -20,10 +20,11 @@ interface LayoutProps {
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: Home },
-  { path: '/admin/profiles', label: 'Perfiles', icon: User },
   { path: '/admin/appliances', label: 'Electrodomésticos', icon: Database },
   { path: '/admin/predictions', label: 'Predicciones', icon: Database },
   { path: '/admin/climate-predictions', label: 'Predicciones Climáticas', icon: Database },
+  { path: '/solar-production', label: 'Producción Solar', icon: Sun },
+  { path: '/energy-prediction', label: 'Predicción de Consumo', icon: Zap },
 ];
 
 export const Layout = ({ children }: LayoutProps) => {
