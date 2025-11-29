@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { ApplianceForm } from "@/components/ApplianceForm";
 import { ApplianceList } from "@/components/ApplianceList";
 import { ConsumptionDashboard } from "@/components/ConsumptionDashboard";
@@ -8,7 +7,8 @@ import { PriceSettings } from "@/components/PriceSettings";
 import { Button } from "@/components/ui/button";
 import { Appliance } from "@/types/appliance";
 import { calculateConsumption } from "@/utils/consumptionCalculator";
-import { Zap, Sun } from "lucide-react";
+import { Zap } from "lucide-react";
+import { Layout } from "@/components/Layout";
 
 const Index = () => {
   const [appliances, setAppliances] = useState<Appliance[]>([]);
@@ -29,35 +29,20 @@ const Index = () => {
   const summary = calculateConsumption(appliances, pricePerKwh);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-background">
+    <Layout>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header simplificado - el Layout ya tiene la navegación */}
         {/* Header */}
         <header className="mb-8 animate-fade-in">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl gradient-primary">
-                <Zap className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  EcoWatt
-                </h1>
-                <p className="text-muted-foreground">Calculadora de Consumo Eléctrico</p>
-              </div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-3 rounded-xl gradient-primary">
+              <Zap className="h-8 w-8 text-white" />
             </div>
-            <div className="flex items-center gap-2">
-              <Link to="/energy-prediction">
-                <Button variant="outline" className="gap-2">
-                  <Zap className="h-4 w-4" />
-                  Predicción
-                </Button>
-              </Link>
-              <Link to="/solar-production">
-                <Button variant="outline" className="gap-2">
-                  <Sun className="h-4 w-4" />
-                  Producción Solar
-                </Button>
-              </Link>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                EcoWatt
+              </h1>
+              <p className="text-muted-foreground">Calculadora de Consumo Eléctrico</p>
             </div>
           </div>
         </header>
@@ -94,7 +79,7 @@ const Index = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 

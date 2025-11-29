@@ -15,6 +15,7 @@ import { ClimatePredictionsPanel } from "@/components/admin/ClimatePredictionsPa
 import NotFound from "./pages/NotFound";
 import SolarProduction from "./pages/SolarProduction";
 import EnergyPrediction from "./pages/EnergyPrediction";
+import WeatherForecast from "./pages/WeatherForecast";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const App = () => (
             />
             <Route path="/solar-production" element={<SolarProduction />} />
             <Route path="/energy-prediction" element={<EnergyPrediction />} />
+            <Route path="/weather-forecast" element={<WeatherForecast />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             

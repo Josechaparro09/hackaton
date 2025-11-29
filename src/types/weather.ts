@@ -9,6 +9,14 @@ export interface WeatherForecast {
 		shortwave_radiation: number[]; // W/m² por hora
 		temperature_2m: number[];
 	};
+	daily?: {
+		time: string[];
+		temperature_2m_max: number[];
+		temperature_2m_min: number[];
+		shortwave_radiation_sum: number[]; // MJ/m² por día
+		precipitation_sum?: number[];
+		windspeed_10m_max?: number[];
+	};
 }
 
 export interface SolarPrediction {

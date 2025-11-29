@@ -1,20 +1,19 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Layout } from "@/components/Layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApplianceForm } from "@/components/ApplianceForm";
 import { ApplianceList } from "@/components/ApplianceList";
 import { ConsumptionDashboard } from "@/components/ConsumptionDashboard";
 import { SolarBatteryPrediction } from "@/components/SolarBatteryPrediction";
 import { PriceSettings } from "@/components/PriceSettings";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Appliance } from "@/types/appliance";
 import { getAppliances, createAppliance, deleteAppliance } from "@/lib/supabase-queries";
 import { dbApplianceToUI, uiApplianceToDB } from "@/utils/applianceConverter";
 import { calculateConsumption } from "@/utils/consumptionCalculator";
-import { Zap, Sun, ArrowLeft, AlertCircle } from "lucide-react";
+import { Zap, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const STORAGE_KEY_PRICE = "ecowatt_price_per_kwh";
@@ -139,35 +138,19 @@ const EnergyPrediction = () => {
 	const summary = calculateConsumption(appliances, pricePerKwh);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-background">
+		<Layout>
 			<div className="container mx-auto px-4 py-8 max-w-7xl">
 				{/* Header */}
 				<header className="mb-8 animate-fade-in">
-					<div className="flex items-center justify-between mb-2">
-						<div className="flex items-center gap-3">
-							<div className="p-3 rounded-xl gradient-primary">
-								<Zap className="h-8 w-8 text-white" />
-							</div>
-							<div>
-								<h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-									EcoWatt
-								</h1>
-								<p className="text-muted-foreground">Predicción de Consumo Energético</p>
-							</div>
+					<div className="flex items-center gap-3 mb-2">
+						<div className="p-3 rounded-xl gradient-primary">
+							<Zap className="h-8 w-8 text-white" />
 						</div>
-						<div className="flex items-center gap-2">
-							<Link to="/">
-								<Button variant="outline" className="gap-2">
-									<ArrowLeft className="h-4 w-4" />
-									Inicio
-								</Button>
-							</Link>
-							<Link to="/solar-production">
-								<Button variant="outline" className="gap-2">
-									<Sun className="h-4 w-4" />
-									Producción Solar
-								</Button>
-							</Link>
+						<div>
+							<h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+								EcoWatt
+							</h1>
+							<p className="text-muted-foreground">Predicción de Consumo Energético</p>
 						</div>
 					</div>
 				</header>
@@ -225,7 +208,7 @@ const EnergyPrediction = () => {
 					</div>
 				)}
 			</div>
-		</div>
+		</Layout>
 	);
 };
 

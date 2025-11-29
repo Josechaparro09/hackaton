@@ -11,20 +11,22 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, Database, Home, Sun, Zap } from 'lucide-react';
+import { LogOut, User, Database, Home, Sun, Zap, Cloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
-const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: Home },
-  { path: '/admin/appliances', label: 'Electrodomésticos', icon: Database },
-  { path: '/admin/predictions', label: 'Predicciones', icon: Database },
-  { path: '/admin/climate-predictions', label: 'Predicciones Climáticas', icon: Database },
-  { path: '/solar-production', label: 'Producción Solar', icon: Sun },
+const publicNavItems = [
+  { path: '/', label: 'Inicio', icon: Zap },
   { path: '/energy-prediction', label: 'Predicción de Consumo', icon: Zap },
+  { path: '/solar-production', label: 'Producción Solar', icon: Sun },
+  { path: '/weather-forecast', label: 'Predicciones Climáticas', icon: Cloud },
+];
+
+const adminNavItems = [
+  { path: '/admin/appliances', label: 'Electrodomésticos', icon: Database },
 ];
 
 export const Layout = ({ children }: LayoutProps) => {
@@ -48,14 +50,35 @@ export const Layout = ({ children }: LayoutProps) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link to="/dashboard" className="flex items-center gap-2">
+              <Link to="/" className="flex items-center gap-2">
                 <div className="p-2 rounded-lg gradient-primary">
-                  <Database className="h-5 w-5 text-white" />
+                  <Zap className="h-5 w-5 text-white" />
                 </div>
-                <span className="font-bold text-lg">EcoWatt Admin</span>
+                <span className="font-bold text-lg">EcoWatt</span>
               </Link>
               <nav className="hidden md:flex items-center gap-1">
-                {navItems.map((item) => {
+                {/* Navegación pública */}
+                {publicNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={cn(
+                        'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                {/* Navegación admin (solo si está autenticado) */}
+                {user && adminNavItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
                   return (
@@ -76,36 +99,46 @@ export const Layout = ({ children }: LayoutProps) => {
                 })}
               </nav>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar>
-                    <AvatarFallback>
-                      {user?.email?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Mi Cuenta</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar Sesión</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Avatar>
+                        <AvatarFallback>
+                          {user?.email?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">Mi Cuenta</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Cerrar Sesión</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link to="/login">
+                  <Button variant="outline" size="sm">
+                    Iniciar Sesión
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">{children}</main>
+      <main>{children}</main>
     </div>
   );
 };

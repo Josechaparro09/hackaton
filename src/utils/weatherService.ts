@@ -49,6 +49,54 @@ export async function getWeatherForecast(
 }
 
 /**
+ * Obtiene el pronóstico diario del clima de Open-Meteo API (próximos 5 días)
+ */
+export async function getDailyWeatherForecast(
+	latitude: number,
+	longitude: number
+): Promise<WeatherForecast | null> {
+	try {
+		const url = new URL("https://api.open-meteo.com/v1/forecast");
+		url.searchParams.append("latitude", latitude.toString());
+		url.searchParams.append("longitude", longitude.toString());
+		url.searchParams.append("current", "shortwave_radiation,temperature_2m");
+		url.searchParams.append("daily", "temperature_2m_max,temperature_2m_min,shortwave_radiation_sum,precipitation_sum,windspeed_10m_max");
+		url.searchParams.append("forecast_days", "5");
+		url.searchParams.append("timezone", "America/Bogota");
+
+		const response = await fetch(url.toString());
+		if (!response.ok) {
+			throw new Error("Error al obtener datos meteorológicos");
+		}
+
+		const data = await response.json();
+		return {
+			current: {
+				time: data.current.time,
+				shortwave_radiation: data.current.shortwave_radiation || 0,
+				temperature_2m: data.current.temperature_2m || 0,
+			},
+			hourly: {
+				time: [],
+				shortwave_radiation: [],
+				temperature_2m: [],
+			},
+			daily: {
+				time: data.daily?.time || [],
+				temperature_2m_max: data.daily?.temperature_2m_max || [],
+				temperature_2m_min: data.daily?.temperature_2m_min || [],
+				shortwave_radiation_sum: data.daily?.shortwave_radiation_sum || [],
+				precipitation_sum: data.daily?.precipitation_sum || [],
+				windspeed_10m_max: data.daily?.windspeed_10m_max || [],
+			},
+		};
+	} catch (error) {
+		console.error("Error fetching daily weather data:", error);
+		return null;
+	}
+}
+
+/**
  * Obtiene coordenadas de un departamento por nombre
  */
 export function getDepartmentCoordinates(

@@ -1,8 +1,10 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
 import { SolarProductionTable } from "@/components/SolarProductionTable";
+import { SolarProductionKPIs } from "@/components/SolarProductionKPIs";
+import { SolarProductionMap } from "@/components/SolarProductionMap";
 import { SolarProductionData } from "@/types/solarProduction";
-import { Button } from "@/components/ui/button";
-import { Sun, ArrowLeft } from "lucide-react";
+import { Layout } from "@/components/Layout";
+import { Sun } from "lucide-react";
 
 // Datos de ejemplo - departamentos de la región Caribe colombiana
 const sampleData: SolarProductionData[] = [
@@ -57,38 +59,56 @@ const sampleData: SolarProductionData[] = [
 ];
 
 const SolarProduction = () => {
+	const [selectedDepartmentFromMap, setSelectedDepartmentFromMap] = useState<string | null>(null);
+
+	const handleMapDepartmentClick = (department: string) => {
+		setSelectedDepartmentFromMap(department);
+		// Scroll a los KPIs para que el usuario vea el filtro aplicado
+		setTimeout(() => {
+			const kpisElement = document.getElementById("solar-kpis");
+			if (kpisElement) {
+				kpisElement.scrollIntoView({ behavior: "smooth", block: "start" });
+			}
+		}, 100);
+	};
+
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-background">
+		<Layout>
 			<div className="container mx-auto px-4 py-8 max-w-7xl">
 				{/* Header */}
 				<header className="mb-8 animate-fade-in">
-					<div className="flex items-center justify-between mb-2">
-						<div className="flex items-center gap-3">
-							<div className="p-3 rounded-xl gradient-primary">
-								<Sun className="h-8 w-8 text-white" />
-							</div>
-							<div>
-								<h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-									EcoWatt
-								</h1>
-								<p className="text-muted-foreground">Producción Solar Mensual</p>
-							</div>
+					<div className="flex items-center gap-3 mb-2">
+						<div className="p-3 rounded-xl gradient-primary">
+							<Sun className="h-8 w-8 text-white" />
 						</div>
-						<Link to="/">
-							<Button variant="outline" className="gap-2">
-								<ArrowLeft className="h-4 w-4" />
-								Consumo Eléctrico
-							</Button>
-						</Link>
+						<div>
+							<h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+								EcoWatt
+							</h1>
+							<p className="text-muted-foreground">Producción Solar Mensual</p>
+						</div>
 					</div>
 				</header>
 
+				{/* KPIs de Producción Solar */}
+				<div id="solar-kpis" className="mb-8 animate-fade-in" style={{ animationDelay: "100ms" }}>
+					<SolarProductionKPIs data={sampleData} />
+				</div>
+
+				{/* Mapa Interactivo */}
+				<div className="mb-8 animate-fade-in" style={{ animationDelay: "150ms" }}>
+					<SolarProductionMap 
+						data={sampleData} 
+						onDepartmentClick={handleMapDepartmentClick}
+					/>
+				</div>
+
 				{/* Tabla de Producción Solar */}
-				<div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
+				<div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
 					<SolarProductionTable data={sampleData} />
 				</div>
 			</div>
-		</div>
+		</Layout>
 	);
 };
 
