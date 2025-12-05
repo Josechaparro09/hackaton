@@ -27,3 +27,4 @@ export function uiApplianceToDB(uiAppliance: Omit<UIAppliance, "id">): Omit<DBAp
 	};
 }
 
+

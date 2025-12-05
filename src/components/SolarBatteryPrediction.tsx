@@ -30,10 +30,13 @@ import { SolarSystemConfig, DEFAULT_CONFIG } from "@/components/SolarSystemConfi
 import { Appliance } from "@/types/appliance";
 import { BatteryPrediction, WeatherForecast } from "@/types/weather";
 import { cn } from "@/lib/utils";
+import type { PeriodFilter } from "@/pages/EnergyPrediction";
+import { calculateConsumption } from "@/utils/consumptionCalculator";
 
 interface SolarBatteryPredictionProps {
 	appliances: Appliance[];
 	pricePerKwh: number;
+	periodFilter?: PeriodFilter;
 }
 
 const DEPARTMENTS = ["La Guajira", "Cesar", "Atlántico", "Magdalena"];
@@ -41,6 +44,7 @@ const DEPARTMENTS = ["La Guajira", "Cesar", "Atlántico", "Magdalena"];
 export const SolarBatteryPrediction = ({
 	appliances,
 	pricePerKwh,
+	periodFilter = "daily",
 }: SolarBatteryPredictionProps) => {
 	const [selectedDepartment, setSelectedDepartment] = useState<string>("La Guajira");
 	const [loading, setLoading] = useState(false);
@@ -325,9 +329,18 @@ export const SolarBatteryPrediction = ({
 								<CardContent className="p-4">
 									<div className="flex items-center justify-between">
 										<div>
-											<p className="text-sm text-muted-foreground">Consumo Diario</p>
+											<p className="text-sm text-muted-foreground">
+												{periodFilter === "weekly" 
+													? "Consumo Semanal" 
+													: periodFilter === "monthly" 
+													? "Consumo Mensual" 
+													: "Consumo Diario"}
+											</p>
 											<p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-												{prediction.dailyConsumption.toFixed(2)} kWh
+												{(() => {
+													const multiplier = periodFilter === "weekly" ? 7 : periodFilter === "monthly" ? 30 : 1;
+													return (prediction.dailyConsumption * multiplier).toFixed(2);
+												})()} kWh
 											</p>
 										</div>
 										<Zap className="h-8 w-8 text-blue-500" />
@@ -411,13 +424,23 @@ export const SolarBatteryPrediction = ({
 							<Card className="border-l-4 border-l-amber-500">
 								<CardContent className="p-4">
 									<div className="flex items-center justify-between mb-2">
-										<p className="text-sm text-muted-foreground">Almacenamiento Diario</p>
+										<p className="text-sm text-muted-foreground">
+											{periodFilter === "weekly" 
+												? "Almacenamiento Semanal" 
+												: periodFilter === "monthly" 
+												? "Almacenamiento Mensual" 
+												: "Almacenamiento Diario"}
+										</p>
 										<Battery className="h-5 w-5 text-amber-500" />
 									</div>
 									<p className="text-2xl font-bold">
-										{isNaN(prediction.dailyBatteryCharge) || !isFinite(prediction.dailyBatteryCharge) 
-											? "0.00" 
-											: prediction.dailyBatteryCharge.toFixed(2)} kWh
+										{(() => {
+											const dailyCharge = isNaN(prediction.dailyBatteryCharge) || !isFinite(prediction.dailyBatteryCharge) 
+												? 0 
+												: prediction.dailyBatteryCharge;
+											const multiplier = periodFilter === "weekly" ? 7 : periodFilter === "monthly" ? 30 : 1;
+											return (dailyCharge * multiplier).toFixed(2);
+										})()} kWh
 									</p>
 									<p className="text-xs text-muted-foreground mt-1">
 										Capacidad utilizable en baterías
@@ -428,11 +451,20 @@ export const SolarBatteryPrediction = ({
 							<Card className="border-l-4 border-l-violet-500">
 								<CardContent className="p-4">
 									<div className="flex items-center justify-between mb-2">
-										<p className="text-sm text-muted-foreground">Capacidad Necesaria</p>
+										<p className="text-sm text-muted-foreground">
+											{periodFilter === "weekly" 
+												? "Capacidad Necesaria Semanal" 
+												: periodFilter === "monthly" 
+												? "Capacidad Necesaria Mensual" 
+												: "Capacidad Necesaria"}
+										</p>
 										<TrendingUp className="h-5 w-5 text-violet-500" />
 									</div>
 									<p className="text-2xl font-bold">
-										{prediction.batteryCapacityNeeded.toFixed(2)} kWh
+										{(() => {
+											const multiplier = periodFilter === "weekly" ? 7 : periodFilter === "monthly" ? 30 : 1;
+											return (prediction.batteryCapacityNeeded * multiplier).toFixed(2);
+										})()} kWh
 									</p>
 									<p className="text-xs text-muted-foreground mt-1">
 										Recomendada para sistema

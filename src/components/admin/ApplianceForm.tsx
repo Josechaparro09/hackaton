@@ -12,11 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createAppliance, updateAppliance } from '@/lib/supabase-queries';
 import { toast } from 'sonner';
 import type { Appliance } from '@/types/database';
 import { APPLIANCE_CATEGORIES } from '@/utils/consumptionCalculator';
+import { ImageUploadAnalyzer } from '@/components/ImageUploadAnalyzer';
+import { geminiDataToDB } from '@/utils/geminiConverter';
+import type { ExtractedApplianceData } from '@/lib/gemini-service';
+import { Upload, PenTool } from 'lucide-react';
 
 const applianceSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
@@ -36,12 +41,16 @@ interface ApplianceFormProps {
 export const ApplianceForm = ({ appliance, onSuccess }: ApplianceFormProps) => {
   const queryClient = useQueryClient();
   const [category, setCategory] = useState(appliance?.category || '');
+  const [useImageAnalysis, setUseImageAnalysis] = useState(false);
+  const [geminiData, setGeminiData] = useState<ExtractedApplianceData | null>(null);
+  
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm<ApplianceFormData>({
     resolver: zodResolver(applianceSchema),
     defaultValues: {
@@ -52,6 +61,10 @@ export const ApplianceForm = ({ appliance, onSuccess }: ApplianceFormProps) => {
       quantity: appliance?.quantity || 1,
     },
   });
+
+  const watchedName = watch('name');
+  const watchedPowerWatts = watch('power_watts');
+  const watchedCategory = watch('category');
 
   useEffect(() => {
     if (appliance) {
@@ -92,7 +105,26 @@ export const ApplianceForm = ({ appliance, onSuccess }: ApplianceFormProps) => {
     },
   });
 
+  const handleDataExtracted = (data: ExtractedApplianceData) => {
+    // Llenar automáticamente los campos con los datos extraídos
+    if (data.name) setValue('name', data.name);
+    if (data.power_watts) setValue('power_watts', data.power_watts);
+    if (data.category) {
+      setCategory(data.category);
+      setValue('category', data.category);
+    }
+    setGeminiData(data);
+  };
+
   const onSubmit = (data: ApplianceFormData) => {
+    // Si hay datos de Gemini y es creación nueva, usarlos
+    if (geminiData && !appliance) {
+      const dbData = geminiDataToDB(geminiData, data.daily_hours);
+      createMutation.mutate(dbData);
+      setGeminiData(null);
+      return;
+    }
+
     const submitData = {
       name: data.name,
       category,
@@ -108,86 +140,278 @@ export const ApplianceForm = ({ appliance, onSuccess }: ApplianceFormProps) => {
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nombre *</Label>
-        <Input id="name" {...register('name')} placeholder="Refrigerador Samsung" required />
-        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="category">Categoría *</Label>
-        <Select value={category} onValueChange={(value) => {
-          setCategory(value);
-          setValue('category', value);
-        }}>
-          <SelectTrigger id="category">
-            <SelectValue placeholder="Selecciona una categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            {APPLIANCE_CATEGORIES.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
+  // Si está editando, no mostrar tabs
+  if (appliance) {
+    return (
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="power_watts">Potencia (Watts) *</Label>
+          <Label htmlFor="name">Nombre *</Label>
+          <Input id="name" {...register('name')} placeholder="Refrigerador Samsung" required />
+          {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category">Categoría *</Label>
+          <Select value={category} onValueChange={(value) => {
+            setCategory(value);
+            setValue('category', value);
+          }}>
+            <SelectTrigger id="category">
+              <SelectValue placeholder="Selecciona una categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              {APPLIANCE_CATEGORIES.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="power_watts">Potencia (Watts) *</Label>
+            <Input
+              id="power_watts"
+              type="number"
+              {...register('power_watts', { valueAsNumber: true })}
+              placeholder="150"
+              min="1"
+              required
+            />
+            {errors.power_watts && (
+              <p className="text-sm text-destructive">{errors.power_watts.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="daily_hours">Horas diarias *</Label>
+            <Input
+              id="daily_hours"
+              type="number"
+              step="0.5"
+              {...register('daily_hours', { valueAsNumber: true })}
+              placeholder="24"
+              min="0"
+              max="24"
+              required
+            />
+            {errors.daily_hours && (
+              <p className="text-sm text-destructive">{errors.daily_hours.message}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="quantity">Cantidad</Label>
           <Input
-            id="power_watts"
+            id="quantity"
             type="number"
-            {...register('power_watts', { valueAsNumber: true })}
-            placeholder="150"
+            {...register('quantity', { valueAsNumber: true })}
+            placeholder="1"
             min="1"
-            required
           />
-          {errors.power_watts && (
-            <p className="text-sm text-destructive">{errors.power_watts.message}</p>
-          )}
+          {errors.quantity && <p className="text-sm text-destructive">{errors.quantity.message}</p>}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="daily_hours">Horas diarias *</Label>
-          <Input
-            id="daily_hours"
-            type="number"
-            step="0.5"
-            {...register('daily_hours', { valueAsNumber: true })}
-            placeholder="24"
-            min="0"
-            max="24"
-            required
-          />
-          {errors.daily_hours && (
-            <p className="text-sm text-destructive">{errors.daily_hours.message}</p>
-          )}
+        <div className="flex justify-end gap-2">
+          <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+            {appliance ? 'Actualizar' : 'Crear'}
+          </Button>
         </div>
-      </div>
+      </form>
+    );
+  }
 
-      <div className="space-y-2">
-        <Label htmlFor="quantity">Cantidad</Label>
-        <Input
-          id="quantity"
-          type="number"
-          {...register('quantity', { valueAsNumber: true })}
-          placeholder="1"
-          min="1"
-        />
-        {errors.quantity && <p className="text-sm text-destructive">{errors.quantity.message}</p>}
-      </div>
+  // Formulario para crear nuevo con tabs
+  return (
+    <div className="space-y-4">
+      <Tabs value={useImageAnalysis ? "image" : "manual"} onValueChange={(v) => setUseImageAnalysis(v === "image")}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="manual" className="gap-2">
+            <PenTool className="h-4 w-4" />
+            <span>Manual</span>
+          </TabsTrigger>
+          <TabsTrigger value="image" className="gap-2">
+            <Upload className="h-4 w-4" />
+            <span>Desde Imagen</span>
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="flex justify-end gap-2">
-        <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-          {appliance ? 'Actualizar' : 'Crear'}
-        </Button>
-      </div>
-    </form>
+        <TabsContent value="image" className="space-y-4 mt-4">
+          <ImageUploadAnalyzer onDataExtracted={handleDataExtracted} />
+          <div className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg">
+            <p className="font-medium mb-2">Después de analizar la imagen:</p>
+            <p className="leading-relaxed">
+              Los datos se llenarán automáticamente. Solo necesitas ingresar las{' '}
+              <strong>horas de uso diario</strong> y hacer clic en "Crear".
+            </p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="manual" className="mt-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre *</Label>
+              <Input id="name" {...register('name')} placeholder="Refrigerador Samsung" required />
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoría *</Label>
+              <Select value={category} onValueChange={(value) => {
+                setCategory(value);
+                setValue('category', value);
+              }}>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Selecciona una categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  {APPLIANCE_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="power_watts">Potencia (Watts) *</Label>
+                <Input
+                  id="power_watts"
+                  type="number"
+                  {...register('power_watts', { valueAsNumber: true })}
+                  placeholder="150"
+                  min="1"
+                  required
+                />
+                {errors.power_watts && (
+                  <p className="text-sm text-destructive">{errors.power_watts.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="daily_hours">Horas diarias *</Label>
+                <Input
+                  id="daily_hours"
+                  type="number"
+                  step="0.5"
+                  {...register('daily_hours', { valueAsNumber: true })}
+                  placeholder="24"
+                  min="0"
+                  max="24"
+                  required
+                />
+                {errors.daily_hours && (
+                  <p className="text-sm text-destructive">{errors.daily_hours.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Cantidad</Label>
+              <Input
+                id="quantity"
+                type="number"
+                {...register('quantity', { valueAsNumber: true })}
+                placeholder="1"
+                min="1"
+              />
+              {errors.quantity && <p className="text-sm text-destructive">{errors.quantity.message}</p>}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                Crear
+              </Button>
+            </div>
+          </form>
+        </TabsContent>
+      </Tabs>
+
+      {/* Formulario común que se muestra siempre (para cuando se usa análisis de imagen) */}
+      {useImageAnalysis && (watchedName || watchedPowerWatts || watchedCategory) && (
+        <div className="mt-4 pt-4 border-t">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name-image">Nombre *</Label>
+              <Input id="name-image" {...register('name')} placeholder="Refrigerador Samsung" required />
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="power-image">Potencia (Watts) *</Label>
+                <Input
+                  id="power-image"
+                  type="number"
+                  {...register('power_watts', { valueAsNumber: true })}
+                  placeholder="150"
+                  min="1"
+                  required
+                />
+                {errors.power_watts && (
+                  <p className="text-sm text-destructive">{errors.power_watts.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="hours-image">
+                  Horas de uso diario <span className="text-primary">*</span>
+                </Label>
+                <Input
+                  id="hours-image"
+                  type="number"
+                  step="0.5"
+                  {...register('daily_hours', { valueAsNumber: true })}
+                  placeholder="24"
+                  min="0"
+                  max="24"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  * Ingresa las horas de uso diario
+                </p>
+                {errors.daily_hours && (
+                  <p className="text-sm text-destructive">{errors.daily_hours.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category-image">Categoría *</Label>
+              <Select value={category} onValueChange={(value) => {
+                setCategory(value);
+                setValue('category', value);
+              }}>
+                <SelectTrigger id="category-image">
+                  <SelectValue placeholder="Selecciona una categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  {APPLIANCE_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                Crear Electrodoméstico
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
   );
 };
 

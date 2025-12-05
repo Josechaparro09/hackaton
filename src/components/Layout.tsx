@@ -19,7 +19,7 @@ interface LayoutProps {
 }
 
 const publicNavItems = [
-  { path: '/', label: 'Inicio', icon: Zap },
+  { path: '/home', label: 'Inicio', icon: Zap },
   { path: '/energy-prediction', label: 'Predicción de Consumo', icon: Zap },
   { path: '/solar-production', label: 'Producción Solar', icon: Sun },
   { path: '/weather-forecast', label: 'Predicciones Climáticas', icon: Cloud },
@@ -51,9 +51,11 @@ export const Layout = ({ children }: LayoutProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Link to="/" className="flex items-center gap-2">
-                <div className="p-2 rounded-lg gradient-primary">
-                  <Zap className="h-5 w-5 text-white" />
-                </div>
+                <img 
+                  src="/favicon.svg" 
+                  alt="EcoWatt Logo" 
+                  className="h-8 w-8"
+                />
                 <span className="font-bold text-lg">EcoWatt</span>
               </Link>
               <nav className="hidden md:flex items-center gap-1">

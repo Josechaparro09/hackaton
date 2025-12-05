@@ -278,3 +278,4 @@ sugerencia = {
 
 **Implementar las 3 mejoras de Alta Prioridad** mejoraría significativamente la precisión de los cálculos sin aumentar demasiado la complejidad del código.
 
+

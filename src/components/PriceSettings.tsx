@@ -32,7 +32,6 @@ export const PriceSettings = ({ pricePerKwh, onPriceChange }: PriceSettingsProps
             className="text-lg font-medium"
           />
           <p className="text-xs text-muted-foreground">
-            El precio promedio en España es aproximadamente €0.15/kWh
           </p>
         </div>
       </CardContent>

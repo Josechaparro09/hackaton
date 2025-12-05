@@ -1,20 +1,48 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ConsumptionSummary } from "@/types/appliance";
-import { Zap, TrendingUp, DollarSign, Calendar } from "lucide-react";
+import { Zap, TrendingUp, Calendar } from "lucide-react";
+
+export type PeriodFilter = "daily" | "weekly" | "monthly";
 
 interface ConsumptionDashboardProps {
   summary: ConsumptionSummary;
+  periodFilter?: PeriodFilter;
 }
 
-export const ConsumptionDashboard = ({ summary }: ConsumptionDashboardProps) => {
+export const ConsumptionDashboard = ({ summary, periodFilter = "daily" }: ConsumptionDashboardProps) => {
+  const getFilteredValue = () => {
+    switch (periodFilter) {
+      case "weekly":
+        return {
+          kwh: summary.dailyKwh * 7,
+          cost: summary.dailyCost * 7,
+          title: "Consumo Semanal",
+        };
+      case "monthly":
+        return {
+          kwh: summary.monthlyKwh,
+          cost: summary.monthlyCost,
+          title: "Consumo Mensual",
+        };
+      default:
+        return {
+          kwh: summary.dailyKwh,
+          cost: summary.dailyCost,
+          title: "Consumo Diario",
+        };
+    }
+  };
+
+  const filtered = getFilteredValue();
+
   const stats = [
     {
-      title: "Consumo Diario",
-      value: summary.dailyKwh.toFixed(2),
+      title: filtered.title,
+      value: filtered.kwh.toFixed(2),
       unit: "kWh",
-      cost: summary.dailyCost.toFixed(2),
-      icon: Zap,
-      gradient: "from-emerald-500 to-teal-500",
+      cost: filtered.cost.toFixed(2),
+      icon: periodFilter === "weekly" ? Calendar : periodFilter === "monthly" ? Calendar : Zap,
+      gradient: periodFilter === "weekly" ? "from-blue-500 to-cyan-500" : periodFilter === "monthly" ? "from-indigo-500 to-purple-500" : "from-emerald-500 to-teal-500",
     },
     {
       title: "Consumo Mensual",
@@ -56,11 +84,12 @@ export const ConsumptionDashboard = ({ summary }: ConsumptionDashboardProps) => 
                   <Icon className="h-6 w-6 text-white" />
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium text-foreground">${stat.cost}</span>
-                <span className="text-muted-foreground">costo estimado</span>
-              </div>
+              {stat.cost !== undefined && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-foreground">${stat.cost}</span>
+                  <span className="text-muted-foreground">costo estimado</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         );

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,15 +12,39 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Redirigir a la página de inicio si el usuario ya está autenticado
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/home', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si el usuario está autenticado, redirigir (esto es una protección adicional)
+  if (user) {
+    return <Navigate to="/home" replace />;
+  }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       await signIn(email, password);
-      navigate('/dashboard');
+      navigate('/home');
     } catch (error) {
       // Error handled in AuthContext
     } finally {
@@ -33,7 +57,7 @@ const Login = () => {
     setLoading(true);
     try {
       await signUp(email, password);
-      navigate('/dashboard');
+      navigate('/home');
     } catch (error) {
       // Error handled in AuthContext
     } finally {

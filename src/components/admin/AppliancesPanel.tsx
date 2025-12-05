@@ -114,20 +114,35 @@ export const AppliancesPanel = () => {
         />
 
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
+          <DialogContent 
+            className="max-w-2xl max-h-[90vh] p-0 gap-0 overflow-hidden" 
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              maxHeight: '90vh'
+            }}
+          >
+            <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0 bg-background">
               <DialogTitle>
                 {editingAppliance ? 'Editar Electrodoméstico' : 'Nuevo Electrodoméstico'}
               </DialogTitle>
             </DialogHeader>
-            <ApplianceForm
-              appliance={editingAppliance}
-              onSuccess={() => {
-                setIsFormOpen(false);
-                setEditingAppliance(null);
-                queryClient.invalidateQueries({ queryKey: ['appliances'] });
+            <div 
+              className="overflow-y-auto overflow-x-hidden px-6 py-4 flex-1" 
+              style={{ 
+                minHeight: 0,
+                WebkitOverflowScrolling: 'touch'
               }}
-            />
+            >
+              <ApplianceForm
+                appliance={editingAppliance}
+                onSuccess={() => {
+                  setIsFormOpen(false);
+                  setEditingAppliance(null);
+                  queryClient.invalidateQueries({ queryKey: ['appliances'] });
+                }}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>

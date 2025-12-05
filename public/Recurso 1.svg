@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_2" data-name="Capa 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 302.04 308.56">
+  <defs>
+    <style>
+      .cls-1 {
+        letter-spacing: 0em;
+      }
+
+      .cls-2 {
+        fill: #444c4f;
+        font-family: Montserrat-Bold, Montserrat;
+        font-size: 67.89px;
+        font-variation-settings: 'wght' 700;
+        font-weight: 700;
+      }
+
+      .cls-3 {
+        letter-spacing: 0em;
+      }
+
+      .cls-4 {
+        fill: #13a286;
+      }
+
+      .cls-5 {
+        fill: #9ed22f;
+      }
+
+      .cls-6 {
+        letter-spacing: 0em;
+      }
+
+      .cls-7 {
+        fill: #97cc33;
+      }
+
+      .cls-8 {
+        letter-spacing: -.01em;
+      }
+
+      .cls-9 {
+        letter-spacing: -.04em;
+      }
+
+      .cls-10 {
+        letter-spacing: -.05em;
+      }
+    </style>
+  </defs>
+  <g id="Capa_1-2" data-name="Capa 1">
+    <g>
+      <g>
+        <path class="cls-4" d="M143.88,192.82v-43.42l-20.07,20.07,13.32-50.79s-15.84-1.44-15.92-13.88c-.02-3.21,1.22-6.3,3.14-8.86,13.87-18.47,25.94-33.38,25.94-33.38V0s-71.69,74.57-66.68,120.13c5.02,45.57,51.94,68.87,60.25,72.69Z"/>
+        <polygon class="cls-5" points="162.17 58.53 129.72 106.97 148.84 106.97 137.09 145.53 170.79 96.41 152.14 96.41 162.17 58.53"/>
+        <path class="cls-7" d="M157.78,130.85v60.82s50.9-18.39,60.09-66.89c5.85-31.56-21.53-75.25-62.91-122.69v54.55l21.32-24.04-12.54,52.88s12.2,1.39,15.05,8.99c1.72,4.6,2.51,11.71-21.01,36.37Z"/>
+      </g>
+      <text/>
+      <text class="cls-2" transform="translate(0 277.8)"><tspan class="cls-1" x="0" y="0">E</tspan><tspan class="cls-6" x="45.28" y="0">c</tspan><tspan class="cls-9" x="84.93" y="0">o</tspan><tspan class="cls-10" x="126.68" y="0">W</tspan><tspan x="201.9" y="0">a</tspan><tspan class="cls-8" x="243.79" y="0">t</tspan><tspan class="cls-3" x="272.51" y="0">t</tspan></text>
+    </g>
+  </g>
+</svg>

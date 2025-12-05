@@ -2,24 +2,25 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/Layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ApplianceForm } from "@/components/ApplianceForm";
 import { ApplianceList } from "@/components/ApplianceList";
 import { ConsumptionDashboard } from "@/components/ConsumptionDashboard";
 import { SolarBatteryPrediction } from "@/components/SolarBatteryPrediction";
 import { PriceSettings } from "@/components/PriceSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Appliance } from "@/types/appliance";
-import { getAppliances, createAppliance, deleteAppliance } from "@/lib/supabase-queries";
-import { dbApplianceToUI, uiApplianceToDB } from "@/utils/applianceConverter";
-import { geminiDataToDB } from "@/utils/geminiConverter";
-import type { ExtractedApplianceData } from "@/lib/gemini-service";
+import { getAppliances, deleteAppliance } from "@/lib/supabase-queries";
+import { dbApplianceToUI } from "@/utils/applianceConverter";
 import { calculateConsumption } from "@/utils/consumptionCalculator";
-import { Zap, AlertCircle } from "lucide-react";
+import { Zap, AlertCircle, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 const STORAGE_KEY_PRICE = "ecowatt_price_per_kwh";
 const STORAGE_KEY_APPLIANCES = "ecowatt_appliances";
+
+import type { PeriodFilter } from "@/components/ConsumptionDashboard";
 
 const EnergyPrediction = () => {
 	const { user } = useAuth();
@@ -28,6 +29,7 @@ const EnergyPrediction = () => {
 		const stored = localStorage.getItem(STORAGE_KEY_PRICE);
 		return stored ? parseFloat(stored) : 0.15;
 	});
+	const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("daily");
 
 	// Cargar electrodomésticos desde Supabase si hay usuario
 	const { data: dbAppliances, isLoading, error } = useQuery({
@@ -61,20 +63,7 @@ const EnergyPrediction = () => {
 		? dbAppliances.map(dbApplianceToUI)
 		: localAppliances;
 
-	// Mutaciones para crear y eliminar
-	const createMutation = useMutation({
-		mutationFn: createAppliance,
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["appliances"] });
-			toast.success("Electrodoméstico agregado");
-		},
-		onError: (error: Error) => {
-			toast.error("Error al agregar electrodoméstico", {
-				description: error.message,
-			});
-		},
-	});
-
+	// Mutación para eliminar
 	const deleteMutation = useMutation({
 		mutationFn: deleteAppliance,
 		onSuccess: () => {
@@ -102,51 +91,6 @@ const EnergyPrediction = () => {
 	useEffect(() => {
 		localStorage.setItem(STORAGE_KEY_PRICE, pricePerKwh.toString());
 	}, [pricePerKwh]);
-
-	const handleAddAppliance = async (appliance: Omit<Appliance, "id">) => {
-		if (user) {
-			// Guardar en Supabase
-			try {
-				await createMutation.mutateAsync(uiApplianceToDB(appliance));
-			} catch (error) {
-				// Error manejado en onError
-			}
-		} else {
-			// Guardar en localStorage
-			const newAppliance: Appliance = {
-				...appliance,
-				id: crypto.randomUUID(),
-			};
-			const updated = [...localAppliances, newAppliance];
-			setLocalAppliances(updated);
-		}
-	};
-
-	const handleAddApplianceWithGeminiData = async (
-		geminiData: ExtractedApplianceData,
-		dailyHours: number
-	) => {
-		if (user) {
-			// Guardar en Supabase con todos los datos de Gemini
-			try {
-				const dbData = geminiDataToDB(geminiData, dailyHours);
-				await createMutation.mutateAsync(dbData);
-			} catch (error) {
-				// Error manejado en onError
-			}
-		} else {
-			// Para usuarios sin autenticación, convertir a formato UI básico
-			const uiAppliance: Appliance = {
-				id: crypto.randomUUID(),
-				name: geminiData.name,
-				powerWatts: geminiData.power_watts,
-				hoursPerDay: dailyHours,
-				category: geminiData.category,
-			};
-			const updated = [...localAppliances, uiAppliance];
-			setLocalAppliances(updated);
-		}
-	};
 
 	const handleDeleteAppliance = async (id: string) => {
 		if (user) {
@@ -185,17 +129,39 @@ const EnergyPrediction = () => {
 					</div>
 				</header>
 
+				{/* Filtro de Período */}
+				{appliances.length > 0 && (
+					<div className="mb-4 sm:mb-6 animate-fade-in">
+						<div className="flex items-center gap-3">
+							<Calendar className="h-5 w-5 text-muted-foreground" />
+							<Label htmlFor="period-filter" className="text-sm font-medium">
+								Filtrar por:
+							</Label>
+							<Select value={periodFilter} onValueChange={(value: PeriodFilter) => setPeriodFilter(value)}>
+								<SelectTrigger id="period-filter" className="w-[180px]">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="daily">Diario</SelectItem>
+									<SelectItem value="weekly">Semanal</SelectItem>
+									<SelectItem value="monthly">Mensual</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+				)}
+
 				{/* Dashboard */}
 				{appliances.length > 0 && (
 					<div className="mb-4 sm:mb-8 animate-fade-in">
-						<ConsumptionDashboard summary={summary} />
+						<ConsumptionDashboard summary={summary} periodFilter={periodFilter} />
 					</div>
 				)}
 
 				{/* Predicción Solar y Baterías */}
 				{appliances.length > 0 && (
 					<div className="mb-4 sm:mb-8 animate-fade-in">
-						<SolarBatteryPrediction appliances={appliances} pricePerKwh={pricePerKwh} />
+						<SolarBatteryPrediction appliances={appliances} pricePerKwh={pricePerKwh} periodFilter={periodFilter} />
 					</div>
 				)}
 
@@ -220,24 +186,18 @@ const EnergyPrediction = () => {
 
 				{/* Main Content */}
 				{!isLoading && (
-					<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-						{/* Left Column - Form & Settings */}
-						<div className="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
-							<div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-								<ApplianceForm 
-									onAdd={handleAddAppliance}
-									onAddWithGeminiData={handleAddApplianceWithGeminiData}
-								/>
-							</div>
-							<div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
-								<PriceSettings pricePerKwh={pricePerKwh} onPriceChange={setPricePerKwh} />
-							</div>
-						</div>
-
-						{/* Right Column - List */}
-						<div className="lg:col-span-2 animate-fade-in order-1 lg:order-2" style={{ animationDelay: "300ms" }}>
+					<div className="space-y-4 sm:space-y-6">
+						{/* List */}
+						<div className="animate-fade-in">
 							<ApplianceList appliances={appliances} onDelete={handleDeleteAppliance} />
 						</div>
+						
+						{/* Settings */}
+						{appliances.length > 0 && (
+							<div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
+								<PriceSettings pricePerKwh={pricePerKwh} onPriceChange={setPricePerKwh} />
+							</div>
+						)}
 					</div>
 				)}
 			</div>
